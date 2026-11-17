@@ -405,12 +405,19 @@ model still get wrong?
 
 ![Lab 3 results](./images/ft-lab3-results.png?raw=true "Lab 3 next to Lab 2 and the best prompt")
 
-Lab 3 beats Lab 2 and the best prompt on category. (The model changed too, so
-this is the workshop's progress, not LoRA's alone.)
+Lab 3 beats Lab 2 and the best prompt on category. Its model is bigger, already
+follows instructions, and is graded only on its answer, so the higher score is
+not LoRA's doing. LoRA is what made the bigger model cheap to train.
 
-In a live class, post your size, MB and category score in the chat. Scores
-vary a few points from run to run: which sizes beat that, and which fell
-behind? Lab 5 uses the adapter you just trained.
+In a live class, post three things in the chat:
+
+- the adapter size you picked in step 2 (your `r`: 4, 16 or 64)
+- the saved adapter's MB (the line printed right after training, step 6)
+- your category score (the **category** row, **Lab 3** column of RESULTS)
+
+For example: `r=16, 37 MB, 85%`. Scores vary a few points from run to run:
+which sizes beat that, and which fell behind? Lab 5 uses the adapter you just
+trained.
 
 <br><br>
 
@@ -532,11 +539,22 @@ best one that fooled it.
 
 <br><br>
 
+9. **Why are there no scores for Lab 4?** In the first terminal, Lab 4's
+output ends with **NO SCORES IN THIS LAB**. Unlike Labs 2 and 3, this lab does not print how
+many categories, priorities and queues the model got right. Scoring it fairly
+needs as much training as Lab 3, and at 4 bits on a CPU that takes about
+70 minutes instead of 3. So Lab 4 shows how QLoRA works and what it saves, and
+Lab 5 scores the Lab 3 model.
+
+<br><br>
+
 **Optional:** compare Lab 3's adapter (24 training steps) with Lab 4's
 (3 steps): `python tools/look_inside.py out/smollm2-lora out/smollm2-qlora`
 
-**Optional, at home:** a fair quality test: set `QLORA_STEPS = 24` and
-`QLORA_BATCH = 8` (about 70 minutes on a CPU, minutes on a GPU).
+**Optional, at home:** to see Lab 4's scores, set `QLORA_STEPS = 24` and
+`QLORA_BATCH = 8` in `finetune/lab4_qlora.py` and rerun (about 70 minutes on a
+CPU, minutes on a GPU). With 24 steps or more it also answers the 20 test
+tickets and prints its scores next to Lab 3's.
 
 <p align="center">**[END OF LAB]**</p></br></br>
 

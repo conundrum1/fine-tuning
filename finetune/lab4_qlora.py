@@ -23,7 +23,7 @@ from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_t
 
 from common.triage import (
     load_tickets, build_prompt, save_result, load_results, model_size_mb,
-    plain_progress, OUT_DIR,
+    plain_progress, generate_predictions, score, print_card, OUT_DIR,
 )
 
 BASE_MODEL = "HuggingFaceTB/SmolLM2-360M-Instruct"   # same model as Lab 3
@@ -31,6 +31,8 @@ ADAPTER_DIR = os.path.join(OUT_DIR, "smollm2-qlora")
 MERGED_DIR = os.path.join(OUT_DIR, "smollm2-qlora-merged")
 QLORA_STEPS = 3           # enough to see the loss fall; far too few to train fully
 QLORA_BATCH = 2           # examples per step; 4 bits on a CPU slows down a lot with more
+SCORE_FROM = 24           # score the model only if it trains at least this many steps
+N_EVAL = 20               # test tickets to score it on, as in Labs 1-3
 
 
 def folder_mb(path):
@@ -187,6 +189,15 @@ if lab3.get("train_seconds") and lab3.get("steps"):
 else:
     print(f"\n  Seconds per training example: {s_per_example:.1f} at 4 bits.")
 
+# 3 steps is too little training to score. With as many steps as Lab 3 (the
+# at-home test in labs.md), the 4-bit model answers the test tickets too.
+qlora_scores = {}
+if QLORA_STEPS >= SCORE_FROM:
+    print(f"\n  Answering the {N_EVAL} test tickets with the 4-bit model (slow on a CPU)...")
+    eval_rows = list(ds["eval"])[:N_EVAL]
+    qlora_answers = generate_predictions(model, tokenizer, eval_rows, max_new_tokens=24)
+    qlora_scores = score(qlora_answers, eval_rows)
+
 del model, trainer
 gc.collect()
 
@@ -221,9 +232,28 @@ print(f"    one folded-in model (16 bits)  : {merged_mb:,.0f} MB")
 print("  -> Folding in gives up the 4-bit saving, unless the folded-in model is")
 print("     stored in 4 bits again afterwards.")
 
-save_result("qlora_smollm2", {}, {
+save_result("qlora_smollm2", qlora_scores, {
     "model": BASE_MODEL, "method": "qlora (few-step test)",
     "steps": QLORA_STEPS, "batch_size": QLORA_BATCH, "train_seconds": round(elapsed),
     "artifact_mb": round(adapter_mb, 1), "merged_mb": round(merged_mb),
     "fp32_mb": round(fp32_mb), "nf4_mb": round(nf4_mb),
 })
+
+
+# ==========================================================================
+# Results: only when it trained long enough to score
+# ==========================================================================
+print("\n" + "=" * 70)
+if qlora_scores:
+    print(f"RESULTS ({N_EVAL} test tickets)")
+    print("=" * 70)
+    saved = load_results()
+    print_card([("best prompt", saved.get("bestprompt_smollm2", {})),
+                ("Lab 3", saved.get("lora_smollm2", {})), ("Lab 4", qlora_scores)],
+               note=f"Lab 4 trained {QLORA_STEPS} steps on the 4-bit model.")
+else:
+    print("NO SCORES IN THIS LAB")
+    print("=" * 70)
+    print(f"\n  {QLORA_STEPS} steps is too little training to score. Training as long as Lab 3")
+    print("  takes about 70 minutes at 4 bits on a CPU, so this lab shows how QLoRA")
+    print("  works and what it saves. Lab 5 scores the Lab 3 model.")
