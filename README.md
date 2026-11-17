@@ -1,6 +1,6 @@
 # Fine-Tuning Small AI Models: LoRA, QLoRA & Evaluation
 
-**A 3-hour hands-on workshop — Revision 1.4, 10/29/26**
+**A 3-hour hands-on workshop — Revision 1.5, 11/16/26**
 Tech Skills Transformations LLC · Brent C. Laster
 
 Pre-trained models are powerful generalists, but most enterprise use cases demand

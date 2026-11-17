@@ -1,6 +1,6 @@
 # Fine-Tuning Small AI Models: LoRA, QLoRA & Evaluation
 
-## Revision 1.20 - 11/13/26
+## Revision 1.21 - 11/16/26
 
 **Workshop labs**
 
