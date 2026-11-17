@@ -1,6 +1,6 @@
 # Set your Groq API key for this PowerShell window AND every window you open later.
 #
-# The key is only needed for the OPTIONAL Lab 5 Step 6 comparison. Every other
+# The key is only needed for the OPTIONAL comparison in Lab 5's STEP 5. Every other
 # lab runs without it.
 #
 #   .\scripts\setup-key.ps1            # prompts you to paste the key
@@ -26,7 +26,7 @@ if (-not $Key) {
 }
 if (-not $Key.StartsWith("gsk_")) {
     Write-Host "Warning: Groq keys normally start with 'gsk_'. Saving it anyway -"
-    Write-Host "         if Lab 5 Step 6 reports an authentication error, re-check it."
+    Write-Host "         if Lab 5's STEP 5 reports an authentication error, re-check it."
 }
 
 # 1) This window.

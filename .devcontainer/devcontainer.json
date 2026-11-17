@@ -35,7 +35,9 @@
                 }
             },
             "extensions": [
-                "ms-python.python"
+                "ms-python.python",
+                // Draws the diagrams in labs.md in the Markdown preview.
+                "bierner.markdown-mermaid"
             ]
         }
     },

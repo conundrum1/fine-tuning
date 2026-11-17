@@ -71,6 +71,9 @@ py -3.11 --version
 
 You should see `Python 3.11.something`.
 
+> **Already have Python 3.12?** That works too. Skip this step and type
+> `py -3.12` wherever this guide says `py -3.11`.
+
 > **Typing `python` opens the Microsoft Store?** That is a Windows shortcut,
 > not real Python. Use `py -3.11` as shown here, or turn the shortcut off in
 > **Settings → Apps → Advanced app settings → App execution aliases** (switch
@@ -262,6 +265,23 @@ In VS Code:
    (Optional: install the **Python** extension from Microsoft, press
    `Ctrl+Shift+P` → **Python: Select Interpreter**, and choose the one in `.venv`.
    VS Code will then activate it in new terminals for you.)
+4. Install two small VS Code add-ons, once, from that terminal:
+
+   ```
+   code --install-extension .devcontainer/merge-info-0.2.0.vsix
+   code --install-extension bierner.markdown-mermaid
+   ```
+
+   The first shows the notes and yellow highlights the labs mention when you
+   merge code. The second draws the diagrams in `labs.md`; without it they
+   appear as blocks of text. Close the `labs.md` preview and open it again
+   afterwards. (You can also read `labs.md` on GitHub, which draws the
+   diagrams for you:
+   <https://github.com/skillrepos/fine-tuning/blob/main/labs.md>.)
+
+Run the labs in this VS Code terminal, not in a separate PowerShell or Git Bash
+window: the labs ask you to open a second terminal beside the first, and the
+step in Lab 4 where you type your own tickets works best here.
 
 **You are ready for the workshop.**
 
@@ -293,16 +313,19 @@ Windows:
 | In `labs.md` (Codespace) | In PowerShell |
 |---|---|
 | `source .venv/bin/activate` | `.\.venv\Scripts\Activate.ps1` |
-| `rm -rf out/` | `Remove-Item -Recurse -Force out` |
-| `nproc` | `$env:NUMBER_OF_PROCESSORS` |
+| `cat out/lab1_answers.txt` (and every other `cat out/...` step) | `Get-Content -Encoding UTF8 out\lab1_answers.txt` — plain `cat` works too, but shows the ✓ and ✗ marks in these files as odd characters. |
 | `ls -lh out/smollm2-lora` (Lab 3, optional) | `dir out\smollm2-lora` |
-| `du -sh out/*/` (Lab 5) | `Get-ChildItem out -Directory \| ForEach-Object { "{0,6:N0} MB  {1}" -f ((Get-ChildItem $_ -Recurse -File \| Measure-Object Length -Sum).Sum / 1MB), $_.Name }` |
+| `rm -rf out/` (start over) | `Remove-Item -Recurse -Force out` |
+| `du -sh out/*/` (Lab 5) | `Get-ChildItem out -Directory \| ForEach-Object { "{0,6:N0} MB  {1}" -f ((Get-ChildItem $_.FullName -Recurse -File \| Measure-Object Length -Sum).Sum / 1MB), $_.Name }` |
 
 A few more differences, whichever terminal you use:
 
 | In `labs.md` / the slides | On your PC |
 |---|---|
+| "In a terminal at `/workspaces/fine-tuning`" | Use your `fine-tuning` folder (`$HOME\fine-tuning`). |
 | The terminal starts with `(.venv)` automatically | Activate it yourself in every new terminal (see above). |
+| "Open a second terminal" (every lab uses one to look at files while the lab runs) | Click the **+** at the top right of VS Code's terminal panel, as written (or the **⌄** beside it for Git Bash), then activate the environment there too. `python tools/look_inside.py` and `python tools/ask.py` (Lab 4) need it. |
+| The diagrams in `labs.md` | They need the add-on from Step 11, or read `labs.md` on GitHub. |
 | Times like "about 3 minutes" | Those are measured on a 4-core Codespace. Your PC may be faster or slower, and Lab 4's 4-bit training on Windows has not been timed by us. |
 | Model files live in the repo's `.cache/` folder | They live in `C:\Users\<you>\.cache\huggingface`. |
 | `OMP_NUM_THREADS` is set to 2 | Leave it unset on your PC — the default uses all your cores. |
@@ -320,10 +343,10 @@ code -d extra/lab1_prep_complete.txt finetune/lab1_prep.py
 small arrow next to each highlighted block to copy it from left to right, then
 save with `Ctrl+S`.
 
-To also get the short explanations that pop up when you hover over each block,
-and the yellow highlights in each starter file showing where code goes (the
-Codespace installs this for you), install the workshop's small VS Code
-extension once, from the `fine-tuning` folder:
+The short explanations that pop up when you hover over each block, and the
+yellow highlights in each starter file showing where code goes, come from the
+workshop's small VS Code add-on (Step 11). If you skipped it, install it once,
+from the `fine-tuning` folder:
 
 ```
 code --install-extension .devcontainer/merge-info-0.2.0.vsix

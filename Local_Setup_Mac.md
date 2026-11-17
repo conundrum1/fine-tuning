@@ -76,6 +76,9 @@ You should see `Python 3.11.something`.
 > **Already use Homebrew?** `brew install python@3.11` works instead of the
 > python.org installer, and you can skip the certificates step.
 
+> **Already have Python 3.12?** That works too. Skip this step and type
+> `python3.12` wherever this guide says `python3.11`.
+
 <br>
 
 ## 3. Install VS Code and its `code` command
@@ -237,6 +240,19 @@ In VS Code:
    (Optional: install the **Python** extension from Microsoft, press
    `Cmd+Shift+P` → **Python: Select Interpreter**, and choose the one in `.venv`.
    VS Code will then activate it in new terminals for you.)
+4. Install two small VS Code add-ons, once, from that terminal:
+
+   ```
+   code --install-extension .devcontainer/merge-info-0.2.0.vsix
+   code --install-extension bierner.markdown-mermaid
+   ```
+
+   The first shows the notes and yellow highlights the labs mention when you
+   merge code. The second draws the diagrams in `labs.md`; without it they
+   appear as blocks of text. Close the `labs.md` preview and open it again
+   afterwards. (You can also read `labs.md` on GitHub, which draws the
+   diagrams for you:
+   <https://github.com/skillrepos/fine-tuning/blob/main/labs.md>.)
 
 **You are ready for the workshop.**
 
@@ -251,10 +267,11 @@ written; these are the exceptions.
 
 | In `labs.md` / the slides | On your Mac |
 |---|---|
+| "In a terminal at `/workspaces/fine-tuning`" | Use your `fine-tuning` folder (`~/fine-tuning`). |
 | The terminal starts with `(.venv)` automatically | Run `source .venv/bin/activate` in every new terminal (Step 5). |
-| `Ctrl+S` to save, `Ctrl+Shift+V` to preview | `Cmd+S` and `Cmd+Shift+V`. |
-| `nproc` to count CPU cores | `sysctl -n hw.ncpu` |
-| Times like "training takes 2-4 minutes" | Those are measured on a 4-core Codespace. An Apple Silicon Mac is often faster for Labs 1-3. Lab 4's 4-bit training on a Mac has not been timed by us — it may be faster or slower. |
+| "Open a second terminal" (every lab uses one to look at files while the lab runs) | Click the **+** at the top right of VS Code's terminal panel, as written, then run `source .venv/bin/activate` there too. `python tools/look_inside.py` and `python tools/ask.py` (Lab 4) need it. `cat`, `ls -lh` and `du -sh` work as written. |
+| The diagrams in `labs.md` | They need the add-on from Step 10, or read `labs.md` on GitHub. |
+| Times like "about 3 minutes" | Those are measured on a 4-core Codespace. An Apple Silicon Mac is often faster for Labs 1-3. Lab 4's 4-bit training on a Mac has not been timed by us — it may be faster or slower. |
 | Model files live in the repo's `.cache/` folder | They live in `~/.cache/huggingface`. |
 | `OMP_NUM_THREADS` is set to 2 | Leave it unset on your Mac — the default uses all your cores. |
 | Everything runs on the CPU | Same on your Mac. The labs deliberately use the CPU (`use_cpu=True`), not the Mac's GPU, so your numbers are comparable to everyone else's. Please don't change that during the workshop. |
@@ -272,10 +289,10 @@ code -d extra/lab1_prep_complete.txt finetune/lab1_prep.py
 small arrow next to each highlighted block to copy it from left to right, then
 save with `Cmd+S`.
 
-To also get the short explanations that pop up when you hover over each block,
-and the yellow highlights in each starter file showing where code goes (the
-Codespace installs this for you), install the workshop's small VS Code
-extension once, from the `fine-tuning` folder:
+The short explanations that pop up when you hover over each block, and the
+yellow highlights in each starter file showing where code goes, come from the
+workshop's small VS Code add-on (Step 10). If you skipped it, install it once,
+from the `fine-tuning` folder:
 
 ```
 code --install-extension .devcontainer/merge-info-0.2.0.vsix

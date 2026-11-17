@@ -220,7 +220,6 @@ Local_Setup_Mac.md      Running the labs on your own Mac
 Local_Setup_Windows.md  Running the labs on your own Windows PC
 README-Codespace.md     Codespace details and troubleshooting
 course-spec.md          Course design spec (agenda, topic map, lab plan)
-anticipated-qa.md       Instructor prep: likely student questions
 requirements.txt        Python dependencies
 ```
 
