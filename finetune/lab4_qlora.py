@@ -52,14 +52,16 @@ tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
 if tokenizer.pad_token_id == tokenizer.eos_token_id:
     tokenizer.pad_token = "<|endoftext|>"
 
-# TODO 1: build the 4-bit settings: the "nf4" 4-bit format, calculations done
-#         in 16 bits (bfloat16), and the extra memory saver (double quant) on.
-#         Then pass them to the line below that loads the model, as
-#         quantization_config=.
-bnb_config = None
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",              # a 4-bit format designed for model numbers
+    bnb_4bit_compute_dtype=torch.bfloat16,  # unpacked to 16 bits for each calculation
+    bnb_4bit_use_double_quant=True,         # also shrink the extra scaling numbers
+)
 
 model = AutoModelForCausalLM.from_pretrained(
     BASE_MODEL,
+    quantization_config=bnb_config,         # hand the 4-bit settings to the loader
     dtype=torch.bfloat16,
     device_map={"": "cpu"},
 )
@@ -212,10 +214,8 @@ print("=" * 70)
 # Fold into a 16-bit copy, not the 4-bit one, so the 4-bit rounding is not
 # made permanent.
 base = AutoModelForCausalLM.from_pretrained(BASE_MODEL, dtype=torch.bfloat16)
-# TODO 2: attach the saved adapter to the 16-bit copy of the model
-#         (PeftModel.from_pretrained), then fold it in so it becomes one
-#         ordinary model.
-merged = base
+merged = PeftModel.from_pretrained(base, ADAPTER_DIR)
+merged = merged.merge_and_unload()
 
 merged.save_pretrained(MERGED_DIR)
 tokenizer.save_pretrained(MERGED_DIR)

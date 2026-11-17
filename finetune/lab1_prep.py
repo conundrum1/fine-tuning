@@ -31,9 +31,16 @@ ANSWERS_FILE = os.path.join(OUT_DIR, "lab1_answers.txt")
 # ==========================================================================
 def ask(model, tok, prompt, max_new_tokens):
     """Give a model some text, and return the text it writes next."""
-    # TODO 1: turn the prompt into token numbers, let the model write up to
-    #         max_new_tokens more, and turn just the new part back into text.
-    return ""
+    inputs = tok(prompt, return_tensors="pt")        # text -> token numbers
+    out = model.generate(
+        **inputs,
+        max_new_tokens=max_new_tokens,               # the longest answer allowed
+        do_sample=False,                             # always pick the most likely next word
+        eos_token_id=tok.eos_token_id,               # stop at the model's end-of-text token
+        pad_token_id=tok.eos_token_id,               # required setting; unused for one ticket
+    )
+    new_part = out[0][inputs["input_ids"].shape[1]:]  # skip the prompt, keep what it wrote
+    return tok.decode(new_part, skip_special_tokens=True).strip()   # token numbers -> text
 
 
 # ==========================================================================
@@ -44,8 +51,10 @@ def best_prompt(ticket, examples, tok):
     # A chat model reads a conversation. "system" holds the instructions,
     # "user" is what a person wrote, "assistant" is the model's own reply.
     messages = [{"role": "system", "content": ZERO_SHOT_SYSTEM}]  # rules and every label
-    # TODO 2: add each sample ticket as a "user" message followed by its
-    #         correct answer as "assistant", then the new ticket as "user".
+    for ex in examples:                                            # each sample ticket:
+        messages.append({"role": "user", "content": ex["ticket"]})       # a ticket...
+        messages.append({"role": "assistant", "content": ex["label"]})   # ...and its answer
+    messages.append({"role": "user", "content": ticket})           # then the new ticket
     # Join the conversation into the one long text the model actually reads.
     return tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
@@ -58,8 +67,9 @@ def score_answers(answers, rows):
     right = {"format": 0, "category": 0, "priority": 0, "queue": 0}
     for answer, row in zip(answers, rows):
         right["format"] += right_format(answer)     # exactly "category: .. | priority: .. | queue: .."?
-        # TODO 3: find the category, priority and queue the answer names, and
-        #         count each one that matches the correct answer in row.
+        got = extract_fields(answer)                # the category, priority and queue it names
+        for field in ("category", "priority", "queue"):
+            right[field] += got[field] == row[field]    # right if it matches the correct answer
     n = len(rows)
     return {"n": n, "schema_valid": right["format"] / n,
             "category_acc": right["category"] / n,

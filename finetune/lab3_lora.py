@@ -46,15 +46,19 @@ if tokenizer.pad_token_id == tokenizer.eos_token_id:
 
 model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, dtype=torch.float32)
 
-# TODO 1: add the rest of the LoRA settings, including which parts of the
-#         model get an adapter.
 peft_config = LoraConfig(
-    r=16,
-    lora_alpha=32,
+    r=16,                    # adapter size: bigger can learn more, but trains slower
+    lora_alpha=32,           # how strongly the adapter counts (usually 2 x r)
+    lora_dropout=0.05,       # ignore 5% of adapter values at random while training
+    task_type="CAUSAL_LM",   # a model that writes text, one word piece at a time
+    # The layers to attach adapters to. The names differ between kinds of
+    # model; these are this model's own names.
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                    "gate_proj", "up_proj", "down_proj"],
 )
 
-# TODO 2: add the adapters to the model, then report how much will be trained.
-peft_model = None
+peft_model = get_peft_model(model, peft_config)
+param_report(peft_model, "SmolLM2-360M + LoRA")
 
 
 # ==========================================================================
@@ -73,9 +77,7 @@ def encode(example):
     full_ids = tokenizer(full, add_special_tokens=False)["input_ids"]
 
     # -100 means "don't grade": used for every token of the ticket we gave it.
-    # TODO 3: build the grading list: -100 ("don't grade") for each token of the
-    #         ticket, then the answer's own token numbers, which are graded.
-    labels = full_ids
+    labels = [-100] * len(prompt_ids) + full_ids[len(prompt_ids):]
 
     return {"input_ids": full_ids,
             "attention_mask": [1] * len(full_ids),

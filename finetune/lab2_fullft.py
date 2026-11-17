@@ -52,10 +52,7 @@ eval_rows = list(ds["eval"])[:N_EVAL]
 
 
 def tokenize(example):
-    # TODO 1: build the training text: the prompt, then the correct answer,
-    #         then the end-of-text marker (tokenizer.eos_token) so the model
-    #         learns where to stop.
-    text = ""
+    text = build_prompt(example["ticket"]) + example["label"] + tokenizer.eos_token
     return tokenizer(text, truncation=True, max_length=192)
 
 
@@ -85,16 +82,24 @@ print("\n" + "=" * 70)
 print("STEP 2: Train (about 3 minutes)")
 print("=" * 70)
 
-# TODO 2: fill in the training settings below the output folder.
 args = TrainingArguments(
     output_dir=OUTPUT_DIR,
+    num_train_epochs=2,             # 2 passes over the training data
+    per_device_train_batch_size=8,  # 8 examples per step
+    learning_rate=3e-4,             # how big each adjustment is
+    warmup_steps=0.05,              # start with small adjustments for the first 5% of steps
+    lr_scheduler_type="cosine",     # ...then make them smaller again toward the end
+    logging_steps=loss_every(3),    # print the loss every 3 steps (or: --loss-every N)
+    save_strategy="no",             # don't save extra copies while training
+    use_cpu=True,                   # run on the processor, not a graphics card
 )
 
-# TODO 3: give the Trainer the training examples, the batching helper above
-#         (collator) and the tokenizer (which turns text into token numbers).
 trainer = Trainer(
     model=model,
     args=args,
+    train_dataset=tokenized["train"],
+    data_collator=collator,
+    processing_class=tokenizer,
 )
 
 # One plain line per loss report, plus the model's answer to one test ticket

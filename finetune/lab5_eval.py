@@ -74,8 +74,7 @@ if not os.path.isdir(LORA_DIR):
 # Load the tokenizer saved next to the adapter: it has Lab 3's filler token.
 tokenizer = AutoTokenizer.from_pretrained(LORA_DIR)
 base = AutoModelForCausalLM.from_pretrained(BASE_MODEL, dtype=torch.float32)
-# TODO 1: attach the Lab 3 adapter (saved in LORA_DIR) to the original model.
-model = base
+model = PeftModel.from_pretrained(base, LORA_DIR)
 
 eval_rows = list(load_tickets()["eval"])[:N_EVAL]
 
@@ -101,8 +100,11 @@ per = defaultdict(lambda: [0, 0])     # category -> [right, tickets]
 mixups = Counter()                    # (right category, model's answer) -> count
 for pred, row in zip(preds, eval_rows):
     got = extract_fields(pred)["category"] or "<none given>"
-    # TODO 2: count one ticket for its right category; count it as right when
-    #         the model's answer matches, otherwise count the mix-up.
+    per[row["category"]][1] += 1
+    if got == row["category"]:
+        per[row["category"]][0] += 1
+    else:
+        mixups[(row["category"], got)] += 1
 
 print(f"\n  {'category':24s} right answers")
 for cat in sorted(per):
@@ -137,9 +139,8 @@ def quiz(m):
 
 # Quiz the same model twice: first with the Lab 3 adapter switched off (the
 # original model), then with it on again (the trained model).
-# TODO 3: switch the adapter off for this one quiz, so it scores the original
-#         model: put the line below inside  with model.disable_adapter():
-before = quiz(model.get_base_model())
+with model.disable_adapter():
+    before = quiz(model.get_base_model())
 after = quiz(model.get_base_model())
 
 print(f"\n  questions right: {before:.0%} before training, {after:.0%} after")
@@ -156,9 +157,7 @@ print("=" * 78)
 
 # Until now the adapter sat beside the model as a separate add-on. Folding it
 # in adds its changes to the model's own numbers; the add-on is then gone.
-# TODO 4: fold the adapter into the model's own numbers, so the two become
-#         one ordinary model: model.merge_and_unload()
-folded = model
+folded = model.merge_and_unload()
 
 # Ask the folded-in model the same tickets STEP 2 asked with the adapter separate.
 print("\n  Folded the adapter in. Answering the same tickets again...")
